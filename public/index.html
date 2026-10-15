@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#001a8c">
 <title>elsewhere. — Get Lost. Feel Found.</title>
+<script>
+// Set the opening state before the first paint. The guard restores the page if setup fails.
+if (Element.prototype.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.documentElement.classList.add('entrance-pending');
+  window.elsewhereEntranceGuard = setTimeout(() => {
+    if (window.finishElsewhereEntrance) window.finishElsewhereEntrance();
+    else document.documentElement.classList.remove('entrance-pending');
+  }, 3500);
+}
+</script>
 <style>
 /* ───────────────────────── Fonts (embedded, offline) ───────────────────────── */
 @font-face{font-family:"Fraunces";src:url(./assets/fraunces-variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:block}
@@ -286,6 +296,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--cream);outline-offs
   .scroll{display:flex;top:calc(30 * var(--u));transform:translateX(-50%)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Only the opening composition is hidden before its one-time reveal. */
+.entrance-pending .logo,
+.entrance-pending .links,
+.entrance-pending .btn--nav,
+.entrance-pending .menu,
+.entrance-pending .eyebrow,
+.entrance-pending h1 > span,
+.entrance-pending .sub,
+.entrance-pending .ctas > a,
+.entrance-pending .foot{opacity:0}
 </style>
 </head>
 <body>
@@ -341,5 +362,59 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--cream);outline-offs
     </div>
   </footer>
 </main>
+<script>
+(() => {
+  const root = document.documentElement;
+  if (!root.classList.contains('entrance-pending')) return;
+
+  const animations = [];
+  let complete = false;
+  const finish = () => {
+    if (complete) return;
+    complete = true;
+    root.classList.remove('entrance-pending');
+    animations.forEach(animation => animation.cancel());
+    clearTimeout(window.elsewhereEntranceGuard);
+    delete window.finishElsewhereEntrance;
+    delete window.elsewhereEntranceGuard;
+  };
+  window.finishElsewhereEntrance = finish;
+
+  // All tracks share one clock. The photo and its shade are never animated.
+  const ease = 'cubic-bezier(.22,1,.36,1)';
+  const play = (selector, from, to, delay, duration) => {
+    const element = document.querySelector(selector);
+    if (!element || getComputedStyle(element).display === 'none') return;
+    animations.push(element.animate([from, to], {delay, duration, easing:ease, fill:'both'}));
+  };
+  const settle = (selector, distance, delay, duration) => play(selector,
+    {opacity:0, transform:`translateY(${distance}px)`},
+    {opacity:1, transform:'none'}, delay, duration);
+
+  const start = () => {
+    if (complete) return;
+    settle('.logo', 6, 40, 520);
+    play('.links', {opacity:0}, {opacity:1}, 160, 470);
+    settle('.btn--nav', 5, 220, 500);
+    play('.menu', {opacity:0}, {opacity:1}, 280, 430);
+    settle('.eyebrow', 7, 210, 480);
+
+    const lineFrom = {opacity:1, clipPath:'inset(105% -.15em -.15em -.15em)', transform:'translateY(17px)'};
+    const lineTo = {opacity:1, clipPath:'inset(-.15em -.15em -.15em -.15em)', transform:'none'};
+    play('h1 > span:first-child', lineFrom, lineTo, 340, 850);
+    play('h1 > span:last-child', lineFrom, lineTo, 520, 850);
+
+    settle('.sub', 9, 950, 600);
+    settle('.btn--hero', 10, 1160, 590);
+    settle('.ctas > .link', 7, 1280, 530);
+    play('.foot', {opacity:0}, {opacity:1}, 1390, 650);
+
+    Promise.all(animations.map(animation => animation.finished)).then(finish, finish);
+  };
+
+  // Give the local typefaces a brief chance to load so the title reveals as intended.
+  Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 450))]).then(start, start);
+})();
+</script>
 </body>
 </html>
