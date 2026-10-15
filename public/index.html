@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#001a8c">
+<title>elsewhere. — Get Lost. Feel Found.</title>
+<style>
+/* ───────────────────────── Fonts (embedded, offline) ───────────────────────── */
+@font-face{font-family:"Fraunces";src:url(./assets/fraunces-variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:block}
+@font-face{font-family:"Inter";src:url(./assets/inter-variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:block}
+
+/* ───────────────────────── Design tokens ─────────────────────────
+   The comp was measured on a 1139 × 643 artboard.
+   --u is "one artboard pixel": it is exactly 1px at 1139 × 643 and scales
+   uniformly with the viewport (limited by whichever axis is tighter), so
+   every proportion of the comp is preserved on any desktop size.
+   Edge-anchored pieces (nav, footer) stick to the viewport edges and the
+   full-bleed image covers the whole screen, so there is never empty space. */
+:root{
+  --W:1139; --H:643;
+  --u:calc(min(100vw, 100dvh * 1139 / 643) / 1139);
+  --vh:100dvh;
+  /* surplus height when the screen is taller than 1139:643 (0 on the comp) */
+  --extra:calc(var(--vh) - 643 * var(--u));
+
+  --cream:#FEEED5;          /* buttons  (254,238,213) */
+  --cream-ink:#FEF8DC;      /* logo / headline / UI text */
+  --ink:#070707;            /* button labels */
+  --sky:#01189A;            /* graded sky; fills the 5.75px strip above the photo */
+
+  --serif:"Fraunces", "Times New Roman", serif;
+  --sans:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --pad-x:calc(28 * var(--u));
+}
+@supports not (height:100dvh){
+  :root{ --u:calc(min(100vw, 100vh * 1139 / 643) / 1139); --vh:100vh; }
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--sky)}
+body{
+  overflow:hidden;
+  font-family:var(--sans);
+  color:var(--cream-ink);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  text-rendering:geometricPrecision;
+  font-feature-settings:"kern" 1;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{display:block}
+
+/* ───────────────────────── Stage ───────────────────────── */
+.stage{position:relative;width:100%;height:var(--vh);overflow:hidden;isolation:isolate}
+
+.bg{
+  /* Comp: the photo is width-fitted (1139/1672) and sits 5.75 artboard-px below
+     the top edge. The box keeps that placement and "cover" guarantees the photo
+     always fills it on any other aspect ratio – never an empty band. */
+  position:absolute;left:0;right:0;z-index:-2;
+  top:calc(var(--bg-top,5.75) * var(--u));
+  bottom:calc(var(--bg-bottom,-3.6) * var(--u));
+  /* layer 1: the comp grades the sky slightly warmer (blue × 0.91), multiplied onto the photo */
+  background:
+    linear-gradient(180deg,#FFFFE8 0%,#FFFFE8 74%,rgba(255,255,232,0) 100%) 0 0 / 100% 71.5% no-repeat,
+    url(./assets/alpine-meadow.webp) 50% var(--bg-py,44.5%) / cover no-repeat;
+  background-blend-mode:multiply,normal;
+  /* the snow peak sits at ~50% × 44.5% of the photo: using it as the focal point
+     keeps it under the headline when the screen crops the photo */
+}
+/* legibility shades measured from the comp */
+.shade{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.shade::after{ /* footer fade to black, fitted row-by-row against the comp */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:calc(243 * var(--u));
+  background:linear-gradient(0deg,
+     rgba(0,0,0,0.963) 0%,
+     rgba(0,0,0,0.926) 4.5%,
+     rgba(0,0,0,0.827) 7.8%,
+     rgba(0,0,0,0.755) 11.1%,
+     rgba(0,0,0,0.596) 17.7%,
+     rgba(0,0,0,0.508) 24.3%,
+     rgba(0,0,0,0.375) 30.9%,
+     rgba(0,0,0,0.283) 37.4%,
+     rgba(0,0,0,0.195) 44%,
+     rgba(0,0,0,0.126) 50.6%,
+     rgba(0,0,0,0.111) 57.2%,
+     rgba(0,0,0,0.067) 67%,
+     rgba(0,0,0,0.055) 83.5%,
+     rgba(0,0,0,0.0) 100%);
+}
+
+/* ───────────────────────── Header ───────────────────────── */
+.nav{position:absolute;inset:0 0 auto 0;height:calc(52 * var(--u));z-index:5}
+.logo{
+  position:absolute;left:calc(var(--logo-x,26.6) * var(--u));top:calc(var(--logo-y,8) * var(--u));
+  font-family:var(--serif);
+  font-size:calc(var(--logo-fs,38.6) * var(--u));
+  line-height:1;
+  font-weight:560;
+  font-variation-settings:"opsz" 72,"SOFT" 0,"WONK" 0;
+  letter-spacing:var(--logo-ls,-.01em);
+  color:var(--cream-ink);
+}
+.links{
+  position:absolute;left:50%;top:calc(var(--links-y,19) * var(--u));
+  transform:translateX(calc(-50% + var(--links-dx,-1.5) * var(--u)));
+  display:flex;gap:calc(var(--links-gap,28.5) * var(--u));
+  list-style:none;
+  font-size:calc(var(--nav-fs,10.5) * var(--u));
+  font-weight:500;letter-spacing:var(--nav-ls,.01em);line-height:1.5;
+  white-space:nowrap;
+}
+.links li:nth-child(2){margin-left:calc(var(--l2m,2.5) * var(--u))}
+.links li:nth-child(3){margin-left:calc(var(--l3m,-3.5) * var(--u))}
+.links li:nth-child(4){margin-left:calc(var(--l4m,1) * var(--u));letter-spacing:var(--l4ls,-.02em)}
+.links a{opacity:.93;transition:opacity .2s}
+.links a:hover{opacity:1;text-decoration:underline;text-underline-offset:.35em;text-decoration-thickness:1px}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:999px;background:var(--cream);color:var(--ink);
+  font-weight:650;white-space:nowrap;
+  transition:transform .25s ease,box-shadow .25s ease;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.btn svg{flex:none}
+.btn--nav{
+  position:absolute;right:calc(var(--plan-r,100) * var(--u));top:calc(8 * var(--u));
+  width:calc(155 * var(--u));height:calc(37 * var(--u));
+  font-size:calc(var(--btn-fs,9.8) * var(--u));letter-spacing:var(--btn-ls,.012em);
+  gap:calc(var(--btn-gap,4) * var(--u));
+}
+.btn--nav{padding-top:calc(var(--btn-dy,1.5) * var(--u))}
+.btn--nav svg{width:calc(6 * var(--u));height:calc(6 * var(--u));margin-top:calc(-1 * var(--u))}
+
+.menu{
+  position:absolute;right:calc(27 * var(--u));top:calc(7 * var(--u));
+  width:calc(37 * var(--u));height:calc(37 * var(--u));
+  border-radius:50%;
+  border:1px solid rgba(254,248,220,.70);
+  display:grid;place-content:center;gap:calc(4 * var(--u));
+  transition:background .25s;
+  padding:calc(2 * var(--u)) calc(2 * var(--u)) 0 0; /* optical centring of the bars, per comp */
+}
+.menu:hover{background:rgba(254,248,220,.12)}
+.menu i{display:block;width:calc(13 * var(--u));height:max(1px,calc(1.1 * var(--u)));background:var(--cream-ink);border-radius:1px}
+
+/* ───────────────────────── Hero ───────────────────────── */
+.hero{
+  position:absolute;left:50%;
+  top:calc(var(--hero-y,66) * var(--u) + var(--extra) * .42);
+  transform:translateX(calc(-50% + var(--hero-dx,-2) * var(--u)));
+  width:calc(700 * var(--u));
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  z-index:4;
+}
+.eyebrow{
+  font-size:calc(var(--eb-fs,8.2) * var(--u));font-weight:500;
+  letter-spacing:var(--eb-ls,.236em);line-height:1;
+  margin-right:calc(-1 * var(--eb-ls,.236em)); /* cancel trailing tracking */
+  color:rgba(254,248,220,.84);
+}
+h1{
+  margin-top:calc(var(--h1-mt,9) * var(--u));
+  font-family:var(--serif);
+  font-size:calc(var(--h1-fs,73.2) * var(--u));
+  line-height:calc(var(--h1-lh,62) * var(--u));
+  font-weight:600;
+  font-variation-settings:"opsz" 144,"SOFT" 50,"WONK" 0;
+  letter-spacing:var(--h1-ls,-.03em);
+  word-spacing:var(--h1-ws,.074em);
+  color:var(--cream-ink);
+}
+h1 span{display:block}
+h1 em{font-style:normal}
+h1 .tk2{letter-spacing:var(--tk2-ls,-.022em)}
+h1 .tk{letter-spacing:var(--tk-ls,-.057em);margin-right:calc(var(--tk-mr,3.5) * var(--u))} /* optical tracking tuned to the comp */
+.sub{
+  margin-top:calc(var(--sub-mt,15) * var(--u));
+  font-size:calc(var(--sub-fs,9.9) * var(--u));
+  line-height:calc(var(--sub-lh,11) * var(--u));
+  font-weight:400;letter-spacing:var(--sub-ls,.046em);
+  color:rgba(254,248,220,.93);
+}
+.ctas{
+  margin-top:calc(var(--cta-mt,15.5) * var(--u));
+  display:flex;align-items:center;gap:calc(var(--cta-gap,24.5) * var(--u));
+  transform:translateX(calc(var(--cta-dx,-2) * var(--u)));
+}
+.btn--hero{
+  width:calc(172.5 * var(--u));height:calc(38.5 * var(--u));
+  font-size:calc(var(--cta-fs,9.35) * var(--u));letter-spacing:var(--cta-ls,.012em);
+  gap:calc(var(--cta-igap,3.5) * var(--u));
+  padding-top:calc(var(--cta-dy,3) * var(--u));
+}
+.btn--hero svg{width:calc(6 * var(--u));height:calc(6 * var(--u));margin-top:calc(-1 * var(--u))}
+.link{
+  display:inline-flex;align-items:center;gap:calc(var(--l2-igap,1.5) * var(--u));
+  font-size:calc(var(--l2-fs,9.45) * var(--u));font-weight:600;letter-spacing:var(--l2-ls,.012em);
+  white-space:nowrap;line-height:1;color:var(--cream-ink);
+}
+.link{position:relative;top:calc(var(--l2-dy,.5) * var(--u))}
+.link span{position:relative;padding-bottom:calc(var(--ul-gap,5.5) * var(--u))}
+.link span::after{
+  content:"";position:absolute;left:0;right:calc(-2 * var(--u));bottom:0;height:1px;
+  background:rgba(254,248,220,.48);transform-origin:left;transition:transform .3s;
+}
+.link:hover span::after{transform:scaleX(1.05);background:var(--cream-ink)}
+.link svg{width:calc(7 * var(--u));height:calc(6 * var(--u));margin-top:calc(-7 * var(--u))}
+
+/* ───────────────────────── Footer ───────────────────────── */
+.foot{
+  position:absolute;left:0;right:0;bottom:0;height:calc(70 * var(--u));z-index:5;
+  font-size:calc(var(--ft-fs,9.6) * var(--u));font-weight:500;letter-spacing:var(--ft-ls,.052em);
+  line-height:calc(12 * var(--u));text-transform:uppercase;color:rgba(254,248,220,.90);
+}
+.foot > *{position:absolute}
+.loc{left:calc(29 * var(--u));top:calc(var(--loc-y,15) * var(--u));display:flex;gap:calc(var(--loc-gap,11.5) * var(--u))}
+.loc svg{width:calc(11 * var(--u));height:calc(15 * var(--u));margin-top:calc(var(--pin-dy,1) * var(--u))}
+.rule{left:calc(185 * var(--u));top:calc(var(--rule-y,11) * var(--u));width:1px;height:calc(32 * var(--u));background:rgba(254,248,220,.43)}
+.col{left:calc(224.4 * var(--u));top:calc(var(--loc-y,15) * var(--u))}
+.scroll{left:50%;transform:translateX(calc(-50% + var(--sc-dx,-1) * var(--u)));top:calc(var(--sc-y,21) * var(--u));display:flex;align-items:center;gap:calc(5 * var(--u));white-space:nowrap}
+.scroll svg{width:calc(6 * var(--u));height:calc(8 * var(--u))}
+.pager{right:calc(var(--pg-r,126) * var(--u));top:calc(var(--pg-y,20) * var(--u));font-size:calc(var(--pg-fs,8.6) * var(--u));letter-spacing:.135em;color:rgba(254,248,220,.94)}
+.arrows{right:calc(21 * var(--u));top:calc(var(--ar-y,16) * var(--u));display:flex;align-items:center;gap:0}
+.arrows button{width:calc(18 * var(--u));height:calc(18 * var(--u));display:grid;place-items:center;opacity:.96;transition:opacity .2s}
+.arrows button:hover{opacity:1}
+.arrows svg{width:calc(6 * var(--u));height:calc(7 * var(--u))}
+.arrows .sep{width:1px;height:calc(6 * var(--u));background:rgba(254,248,220,.54);margin:0 calc(14.5 * var(--u)) 0 calc(13.5 * var(--u))}
+
+/* focus */
+a:focus-visible,button:focus-visible{outline:2px solid var(--cream);outline-offset:3px;border-radius:999px}
+
+/* ───────────────────────── Short landscape screens (phones sideways) ───────────────────────── */
+@media (orientation:landscape) and (max-height:500px){
+  :root{ --u:calc(min(100vw / 1139, 100dvh / 520)); }
+  .sub,.eyebrow{display:none}
+  .hero{top:calc(78 * var(--u) + var(--extra) * .3)}
+  h1{margin-top:0}
+  .links{display:none}
+}
+
+/* ───────────────────────── Portrait / mobile layout ───────────────────────── */
+@media (max-aspect-ratio:1/1), (max-width:720px){
+  :root{
+    /* re-based on a 390 px wide artboard, capped by height so it always fits */
+    --u:calc(min(100vw / 390, 100dvh / 700) * 1);
+    --extra:calc(var(--vh) - 700 * var(--u));
+  }
+  .bg{top:0;bottom:0;background-size:100% 100%,auto 122%;background-position:0 0,50% 0} /* drop the peak to ~54% so it sits below the stacked CTAs */
+  .shade::after{height:calc(300 * var(--u))}
+  .nav{height:calc(70 * var(--u))}
+  .logo{left:calc(20 * var(--u));top:calc(16 * var(--u));font-size:calc(30 * var(--u))}
+  .links{display:none}
+  .btn--nav{display:none}
+  .menu{right:calc(20 * var(--u));top:calc(16 * var(--u));width:calc(40 * var(--u));height:calc(40 * var(--u))}
+  .menu i{width:calc(15 * var(--u))}
+  .hero{
+    top:calc(84 * var(--u) + var(--extra) * .22);
+    transform:translateX(-50%);
+    width:calc(350 * var(--u));
+  }
+  .eyebrow{font-size:calc(9 * var(--u))}
+  h1{margin-top:calc(14 * var(--u));font-size:calc(58 * var(--u));line-height:calc(52 * var(--u))}
+  .sub{margin-top:calc(16 * var(--u));font-size:calc(13 * var(--u));line-height:calc(18 * var(--u));max-width:calc(300 * var(--u))}
+  .sub br{display:none}
+  .ctas{margin-top:calc(24 * var(--u));flex-direction:column;gap:calc(18 * var(--u))}
+  .btn--hero{width:calc(230 * var(--u));height:calc(48 * var(--u));font-size:calc(12 * var(--u))}
+  .btn--hero svg{width:calc(7 * var(--u));height:calc(7 * var(--u))}
+  .link{font-size:calc(12 * var(--u))}
+  .link svg{width:calc(9 * var(--u));height:calc(8 * var(--u));margin-top:calc(-8 * var(--u))}
+  .foot{height:calc(84 * var(--u));font-size:calc(10.5 * var(--u));line-height:calc(14 * var(--u));
+        padding-bottom:env(safe-area-inset-bottom)}
+  .loc{left:calc(20 * var(--u));top:calc(24 * var(--u))}
+  .loc svg{width:calc(12 * var(--u));height:calc(17 * var(--u))}
+  .rule,.col,.scroll,.pager{display:none}
+  .arrows{right:calc(14 * var(--u));top:calc(28 * var(--u))}
+  .arrows button{width:calc(28 * var(--u));height:calc(28 * var(--u))}
+  .arrows svg{width:calc(8 * var(--u));height:calc(10 * var(--u))}
+  .arrows .sep{height:calc(10 * var(--u));margin:0 calc(6 * var(--u))}
+}
+@media (max-aspect-ratio:1/1) and (min-width:560px){ /* tablets in portrait: show pager + scroll */
+  .pager{display:block;right:calc(108 * var(--u));top:calc(31 * var(--u));font-size:calc(10 * var(--u))}
+  .scroll{display:flex;top:calc(30 * var(--u));transform:translateX(-50%)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="bg" role="img" aria-label="Alpine meadow with a farmhouse and cypress trees above a lake, snow‑capped mountains glowing at sunset"></div>
+  <div class="shade" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="logo" href="#" aria-label="elsewhere. home">elsewhere.</a>
+    <nav aria-label="Primary">
+      <ul class="links">
+        <li><a href="#">PLACES.</a></li>
+        <li><a href="#">JOURNEYS.</a></li>
+        <li><a href="#">EXPERIENCES.</a></li>
+        <li><a href="#">JOURNAL</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn--nav" href="#">PLAN YOUR ESCAPE
+      <svg viewBox="0 0 6 6" aria-hidden="true"><path d="M.6 5.4 5.2.8M1.6.75h3.65V4.4" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+    </a>
+    <button class="menu" type="button" aria-label="Open menu"><i></i><i></i><i></i></button>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">A DIFFERENT KIND OF GETAWAY</p>
+    <h1><span>Get <em class="tk2">Lost.</em></span><span><em class="tk">Feel</em> Found.</span></h1>
+    <p class="sub">For the places you’ve never seen, the moments <br>you’ve never felt, and the stories you’ll never forget.</p>
+    <div class="ctas">
+      <a class="btn btn--hero" href="#">FIND YOUR ELSEWHERE
+        <svg viewBox="0 0 6 6" aria-hidden="true"><path d="M.6 5.4 5.2.8M1.6.75h3.65V4.4" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+      </a>
+      <a class="link" href="#"><span>EXPLORE THE COLLECTION</span>
+        <svg viewBox="0 0 7 6" aria-hidden="true"><path d="M0 3h6.3M3.7.4 6.3 3 3.7 5.6" fill="none" stroke="currentColor" stroke-width="1.25"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="loc">
+      <svg viewBox="0 0 11 15" aria-hidden="true"><path fill="currentColor" d="M5.5 0A5.5 5.5 0 0 0 0 5.5C0 9.6 5.5 15 5.5 15S11 9.6 11 5.5A5.5 5.5 0 0 0 5.5 0Zm0 7.7a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z"/></svg>
+      <p>Switzerland<br>45°55′ N · 09°15′ E</p>
+    </div>
+    <span class="rule" aria-hidden="true"></span>
+    <p class="col">The Alpine<br>Collection</p>
+    <a class="scroll" href="#">Scroll to wander
+      <svg viewBox="0 0 6 8" aria-hidden="true"><path d="M3 0v7.2M.5 4.8 3 7.3l2.5-2.5" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+    </a>
+    <p class="pager" aria-label="Slide 1 of 4">01 / 04</p>
+    <div class="arrows">
+      <button type="button" aria-label="Previous"><svg viewBox="0 0 6 7" aria-hidden="true"><path d="M5.4 .5 .8 3.5l4.6 3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" aria-label="Next"><svg viewBox="0 0 6 7" aria-hidden="true"><path d="M.8 .5l4.2 3-4.2 3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+  </footer>
+</main>
+</body>
+</html>
